@@ -2,7 +2,7 @@ import time
 import random
 import urllib.request
 
-url = 'http://forums.devshed.com/php-development-5/limit-loop-value-array-977721.html'
+url = 'http://vgd.no/musikk-tv-og-film/jazz'
 
 file = open('/home/fanq/Workspace/learn_mysql/user_agent.log', 'r')
 theFirstFiveWordOfUserAgent = ''
