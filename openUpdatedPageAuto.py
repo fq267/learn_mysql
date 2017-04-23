@@ -27,15 +27,15 @@ sourceidsForPriorityThree = [34, 61, 163, 171, 175, 309, 453, 459, 520, 551,
                              3682, 3688, 3707, 3714, 3715, 3716, 3717, 3737,
                              3761, 3776, 3777, 3887, 3908, 3920, 3941, 3978,
                              3985, 3990, 4042, 4043, 4044, 4045, 4046]
+sourceList = [3374, 3336, 545, 976, 3378, 586, 580, 576, 584, 3777]
 counter = 0
-for sourceid in sourceidsForPriorityTwo:
+for sourceid in sourceList:
     counter += 1
     url = (
-        "" + str(sourceid))
+        "http://p1.integrasco.com:10000/updatesubsourcepage/" + str(sourceid))
     webbrowser.open(url)
     if counter > 10:
         wait = input("PRESS ENTER TO CONTINUE.")
         counter = 0
     else:
         time.sleep(randint(1, 5))
-
