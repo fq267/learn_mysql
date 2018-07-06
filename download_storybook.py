@@ -4,16 +4,26 @@ from pyquery import PyQuery as pq
 import urllib
 import re
 import urllib.parse as urlparse
+import logging
 
-entryUrl = 'http://www.biqugex.com/book_33548/'
+entryUrl = 'http://www.biqugex.com/book_37/'
 
 '''所有访问都使用这个方法'''
 
 
-def open_url_return_str(url):
-    res = urllib.request.urlopen(url)
-    strResult = (res.read().decode('gbk'))
-    return strResult
+def open_url_return_str(url, re_times=3):
+    try:
+        res = urllib.request.urlopen(url)
+        result_of_download = (res.read().decode('gbk'))
+        return result_of_download
+    except Exception as e:
+        print("open_url_return_str", e)
+        if re_times > 0:
+            print("retry times %s" % re_times)
+            time.sleep(10)
+            return open_url_return_str(url, re_times - 1)
+        else:
+            raise UserWarning("Something bad happened")
 
 
 '''获取所有链接，去重。返回字典，key是每章的序号，value是元组，包含章名和链接'''
@@ -51,7 +61,7 @@ def return_wanted_links(dict_of_links):
             id = int(id)
         finally:
             pass
-        if id < 14488844:
+        if id <= 36681:
             print("here passed ", id)
             continue
         else:
@@ -78,7 +88,7 @@ def get_content(link):
 
 
 def operation_file(something):
-    filePath = '/Users/fanq/Workspace/learn_mysql/' + 'zunshang' + '.txt'
+    filePath = 'D:\\Workspace\\learn_mysql\\' + 'wudongqiankun' + '.txt'
     file_object = open(filePath, mode='a', encoding='utf-8')
     try:
         file_object.write(something)
