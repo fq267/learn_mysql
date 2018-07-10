@@ -1,17 +1,19 @@
-import logging
-import urllib, re, time
-from pyquery import PyQuery as pq
+import re
+import time
+import requests
 from urllib.parse import urljoin
+
+from pyquery import PyQuery as pq
 
 
 class BiQuGeDownloader(object):
-    def __init__(self, url):
-        self.url = url
+    def __init__(self):
+        pass
 
     def open_url_return_str(self, url, re_times=3):
         try:
-            res = urllib.request.urlopen(url)
-            result_of_download = (res.read().decode('gbk'))
+            res = requests.get(url)
+            result_of_download = res.text
             print("succeed downloaded")
             return result_of_download
         except Exception as e:
@@ -25,10 +27,10 @@ class BiQuGeDownloader(object):
 
     '''获取所有链接，去重。返回字典，key是每章的序号，value是元组，包含章名和链接'''
 
-    def get_all_links(self, str_of_result, wanted='link'):
+    def get_contents(self, str_of_result, wanted='link'):
         pyquery_object = pq(str_of_result)
         if wanted == 'link':
-            dict_of_chapter = {}
+            dict_of_content = {}
             for item in pyquery_object(".listmain a"):
                 name_of_chapter = pq(item).text()
                 link_of_chapter = pq(item).attr('href')
@@ -38,14 +40,16 @@ class BiQuGeDownloader(object):
                 print(id_of_chapter)
                 print(name_of_chapter)
                 print(link_of_chapter)
-                if id_of_chapter in dict_of_chapter:
+                if id_of_chapter in dict_of_content:
                     continue
                 else:
-                    dict_of_chapter[id_of_chapter] = (name_of_chapter, link_of_chapter)
-            return dict_of_chapter
+                    dict_of_content[id_of_chapter] = (name_of_chapter, link_of_chapter)
+            return dict_of_content
         else:
-            content = pyquery_object("#content").text()
-            return content
+            dict_of_content = {'content': pyquery_object("#content").text(),
+                               'book_name': pyquery_object(".path").find('a').eq(1).text(),
+                               'chapter_name':pyquery_object(".content").find('h1').text()}
+            return dict_of_content
 
 # conn = MongoClient('localhost', 27017)
 # db = conn.novels

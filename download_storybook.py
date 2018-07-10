@@ -4,7 +4,6 @@ from pyquery import PyQuery as pq
 import urllib
 import re
 import urllib.parse as urlparse
-import logging
 
 entryUrl = 'http://www.biqugex.com/book_37/'
 
