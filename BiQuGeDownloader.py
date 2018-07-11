@@ -2,7 +2,6 @@ import re
 import time
 import requests
 from urllib.parse import urljoin
-
 from pyquery import PyQuery as pq
 
 
@@ -12,7 +11,7 @@ class BiQuGeDownloader(object):
 
     def open_url_return_str(self, url, re_times=3):
         try:
-            res = requests.get(url)
+            res = requests.get(url, timeout=5)
             result_of_download = res.text
             print("succeed downloaded")
             return result_of_download
@@ -51,13 +50,3 @@ class BiQuGeDownloader(object):
                                'chapter_name': pyquery_object(".content").find('h1').text()}
             return dict_of_content
 
-# conn = MongoClient('localhost', 27017)
-# db = conn.novels
-# dict_of_chapter = get_all_links(open_url_return_str(entryUrl))
-# for id_of_chapter, (name_of_chapter, link_of_chapter) in dict_of_chapter.items():
-#     print(id_of_chapter, name_of_chapter, link_of_chapter)
-#     db.links_for_books.insert(
-#         {"id_of_chapter": id_of_chapter, "name_of_chapter": name_of_chapter, "link_of_chapter": link_of_chapter,
-#          "status_of_visited": 0})
-#
-# conn.close()
