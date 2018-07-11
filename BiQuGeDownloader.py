@@ -27,14 +27,14 @@ class BiQuGeDownloader(object):
 
     '''获取所有链接，去重。返回字典，key是每章的序号，value是元组，包含章名和链接'''
 
-    def get_contents(self, str_of_result, wanted='link'):
+    def get_contents(self, str_of_result, wanted='link', baseurl=None):
         pyquery_object = pq(str_of_result)
         if wanted == 'link':
             dict_of_content = {}
             for item in pyquery_object(".listmain a"):
                 name_of_chapter = pq(item).text()
                 link_of_chapter = pq(item).attr('href')
-                link_of_chapter = urljoin(self.url, link_of_chapter)
+                link_of_chapter = urljoin(baseurl, link_of_chapter)
                 id_of_chapter = re.findall(r'(\d+)\.html', link_of_chapter)[0]
                 id_of_chapter = int(id_of_chapter)
                 print(id_of_chapter)
@@ -48,7 +48,7 @@ class BiQuGeDownloader(object):
         else:
             dict_of_content = {'content': pyquery_object("#content").text(),
                                'book_name': pyquery_object(".path").find('a').eq(1).text(),
-                               'chapter_name':pyquery_object(".content").find('h1').text()}
+                               'chapter_name': pyquery_object(".content").find('h1').text()}
             return dict_of_content
 
 # conn = MongoClient('localhost', 27017)

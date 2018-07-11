@@ -1,66 +1,39 @@
-# import time
-# from pyquery import PyQuery as pq
-# import urllib
-#
-# entryUrl = 'http://www.chuiyao.com/manhua/3670/'
-#
-#
-# def open_url_return_str(url):
-#     res = urllib.request.urlopen(url)
-#     strResult = (res.read().decode('utf-8'))
-#     return strResult
-#
-#
-# def all_chapters_in_dict_with_name_and_link(pagestr):
-#     pyqueryObject = pq(pagestr)
-#     dictOfChapter = {}
-#     for item in pyqueryObject(".cy_plist ul li a"):
-#         nameOfChapter = pq(item).text()
-#         linkOfChapter = pq(item).attr('href')
-#         dictOfChapter[nameOfChapter] = linkOfChapter
-#     return dictOfChapter
-#
-#
-# homePage = open_url_return_str(entryUrl)
-#
-# dictOfChapter = all_chapters_in_dict_with_name_and_link(homePage)
-# for kForChapter, vForChapter in dictOfChapter.items():
-#     print(vForChapter)
-#     chapterPage = open_url_return_str(vForChapter)
-#     print(chapterPage)
+import BiQuGeDownloader
+from pymongo import MongoClient
+import time
 
 
-# filePath = '/home/fanq/Workspace/learn_mysql/' + kForChapter + \
-#            kForPage + '.jpg'
-# pic = urllib.request.urlopen(vForPage)
-# f = open(filePath, 'wb')
-# f.write(pic.read())
-# f.close()
-# time.sleep(2)
-
-import platform
-from bs4 import BeautifulSoup
-from selenium import webdriver
-
-# PhantomJS files have different extensions
-# under different operating systems
-if platform.system() == 'Windows':
-    PHANTOMJS_PATH = './phantomjs.exe'
-else:
-    PHANTOMJS_PATH = './phantomjs'
+def get_links_from_db():
+    conn = MongoClient('localhost', 27017)
+    db = conn.novels
+    filter_link = {'status_of_visited': {'$eq': 0}}
+    search_res = db.links_for_books.find(filter_link).sort("id_of_chapter", -1)
+    conn.close()
+    return search_res
 
 
-# here we'll use pseudo browser PhantomJS,
-# but browser can be replaced with browser = webdriver.FireFox(),
-# which is good for debugging.
-browser = webdriver.Chrome()
-browser.get('http://www.scoreboard.com/en/tennis/atp-singles/us-open-2015/results/')
-
-# let's parse our html
-print(browser.page_source)
-soup = BeautifulSoup(browser.page_source, "html.parser")
-# get all the games
-games = soup.find_all('tr', {'class': 'even stage-finished'})
-
-# and print out the html for first game
-print(games[0].prettify())
+conn = MongoClient('localhost', 27017)
+db = conn.novels
+search_res = get_links_from_db()
+for record in search_res:
+    link_for_chapter = record['link_of_chapter']
+    id_of_chapter = record['id_of_chapter']
+    print("id_of_chapter  = %s, link_of_chapter = %s" % (id_of_chapter, link_for_chapter))
+    hunter = BiQuGeDownloader.BiQuGeDownloader()
+    try:
+        res = hunter.open_url_return_str(link_for_chapter, re_times=9)
+        res_content = hunter.get_contents(res, wanted='content')
+        res_content['id_of_chapter'] = id_of_chapter
+        print("book_name is %s, chapter_name is %s, content is %s" %
+              (res_content.get('book_name'), res_content.get('chapter_name'), res_content.get('content')[100:120]))
+        updateFilter = {'id_of_chapter': record['id_of_chapter']}
+        updateRes = db.links_for_books.update_one(filter=updateFilter, update={'$set': {"status_of_visited": 1}},
+                                                  upsert=True)
+        db.contents.insert_one(res_content)
+    except UserWarning as e:
+        print(e)
+    finally:
+        conn.close()
+        time.sleep(0.8)
+        print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
+        print("#" * 100, "\n" * 2)
