@@ -38,7 +38,7 @@ def download_by_requests(url, re_times=3, base_url=''):
             return None
 
 
-def remove_invalid_letter(str_begain, valid_letter=['?', '<', '>', '"', '*', '|', '/']):
+def remove_invalid_letter(str_begain, valid_letter=['?', '<', '>', '"', '*', '|', '/', ':']):
     for letter in valid_letter:
         str_begain = str_begain.replace(letter, '')
     return str_begain
@@ -104,11 +104,11 @@ def save_links(list_links):
 def read_5_each(num=5):
     conn = MongoClient('localhost', 27017)
     db = conn.carhome
-    search_res = db.serieslinks.find(limit=80, no_cursor_timeout=True).sort("date", 1)  # '1'是顺序，'-1'是倒叙
+    search_res = db.serieslinks.find(limit=20, no_cursor_timeout=True).sort("date", 1)  # '1'是顺序，'-1'是倒叙
     conn.close()
     i = 1
     for dict_ in search_res:
-        if i >= 60:
+        if i >= 15:
             link = dict_['link']
             print(i, link)
             if not link in list_link:
@@ -118,7 +118,7 @@ def read_5_each(num=5):
 
 while True:
     if len(list_link) <= 1:
-        read_5_each(num=20)
+        read_5_each(num=5)
     entryUrl = list_link[0]
     print("entryurl is ", entryUrl)
     r = download_by_requests(entryUrl, re_times=4)   #从一种车型的图片裤进入
@@ -127,14 +127,27 @@ while True:
     print("获取到的翻页链接是 ", page_links)
     save_links(page_links)
     name_of_car = pyquery_object.find('.fn-left.cartab-title-name').text()      #获取车型的名字
+    name_of_car = remove_invalid_letter(name_of_car)
     print('name_of_car', name_of_car)
     path_dir = 'D:\downloaded_pic\%s\\' % name_of_car       #判断该车型的目录是否存在，不存在就创建
-    path_dir = remove_invalid_letter(path_dir, valid_letter=['?', '<', '>', '"', '*', '|', '/', ':'])
     if not Path(path_dir).exists():
         os.mkdir(path_dir)
-    dict_of_kind = {'1': '车身外观', '10': '中控方向盘', '3': '车厢座椅', '12': '其它细节', '51': '改装', '14': '图解'}
-    kind = 1    #后面通过链接截取来判断， 或者通过页面获取。
-    kind_name = dict_of_kind['1']
+    # dict_of_kind = {'1': '车身外观', '10': '中控方向盘', '3': '车厢座椅',
+    #                 '12': '其它细节', '51': '改装', '14': '图解', '13': '评测', '200': '网友实拍'}
+    # p_num_patt = re.compile('/\d+-(\d+)')   #通过页面获取图片分类。
+    # page_num_list = p_num_patt.findall(entryUrl)
+    # if page_num_list:
+    #     page_num = page_num_list[0]
+    # else:
+    #     raise UserWarning("failed to get kind num")
+    # kind_name = dict_of_kind[page_num]
+    kind_name = pyquery_object.find('.uibox .uibox-title').text()
+    kind_name_patt = re.compile('(\S+)\s*\(')
+    kind_name = kind_name_patt.findall(kind_name)
+    if kind_name:
+        kind_name = kind_name[0]
+    else:
+        raise UserWarning("failed to get kind num")
     p_num_patt = re.compile('-p(\d+)')  #计算图片的序号
     page_num = p_num_patt.findall(entryUrl)
     date = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))

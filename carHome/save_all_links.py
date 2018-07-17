@@ -1,3 +1,4 @@
+import datetime
 import re
 import time
 import random
@@ -11,6 +12,7 @@ from pymongo import MongoClient
 homepage = "https://car.autohome.com.cn/pic/"
 pattenbrand = "/pic/brand-\d+.html"
 pattenseries = "/pic/series/\d+.html"
+pattenparty = "/pic/series/\d+-\d+.html"
 
 
 def download_by_phantom(url, charset='gbk'):
@@ -49,27 +51,39 @@ def parse_page_by_patten(patten, content):
 
 '''获取brand链接'''
 str_home = download_by_phantom(homepage)
-brandLinks = parse_page_by_patten(str_home, pattenbrand)
-seriesLinks = parse_page_by_patten(str_home, pattenseries)
+brandLinks = parse_page_by_patten(pattenbrand, str_home)
+seriesLinks = parse_page_by_patten(pattenseries, str_home)
 for link in brandLinks:
-    time.sleep(random.randint(1, 5))
     str_brand = download_by_requests(link, re_times=5, base_url='https://car.autohome.com.cn/')
-    print('seriesLinks is: ', len(seriesLinks))
-    seriesLinks += parse_page_by_patten(str_brand, pattenseries)
+    seriesLinks += parse_page_by_patten(pattenseries, str_brand)
+seriesLinks = list(set(seriesLinks))
+partyLinks = []
+k = 1
+for link in seriesLinks:
+    print('link is ', link)
+    print('%s / %s' % (k, len(seriesLinks)))
+    str_brand = download_by_requests(link, re_times=5, base_url='https://car.autohome.com.cn/')
+    print('partyLinks is: ', len(partyLinks))
+    for l in parse_page_by_patten(pattenparty, str_brand):
+        if not l in partyLinks:
+            partyLinks.append(l)
+    k += 1
 
 conn = MongoClient('localhost', 27017)
 db = conn.carhome
 i = 1
 base_url = 'https://car.autohome.com.cn/'
-for url in set(seriesLinks):
+for url in set(partyLinks):
     if url.startswith('http'):
         pass
     elif len(base_url) > 0:
         url = urljoin(base_url, url)
-    url = url.replace('.html', '-1-p1.html')
+    # url = url.replace('.html', '-1-p1.html')
     filter_link = {'link': {'$eq': url}}
     search_res = db.serieslinks.find_one(filter_link)
-    date = time.strftime('%Y-%m-%d', time.localtime(time.time()))
+    d1 = datetime.datetime.now()
+    date = d1 - datetime.timedelta(days=10)
+    date = date.strftime('%Y-%m-%d %H:%M:%S')
     if not search_res:
         db.serieslinks.insert_one({"link": url, "date": date})
         print("%d links have added into database" % i, "the info as following: ")
@@ -77,7 +91,9 @@ for url in set(seriesLinks):
         i += 1
     else:
         print("This link is existed, link is %s" % url)
-    print('#'*80, '\n')
+    print('url is ', url)
+    time.sleep(1)
+    print('#' * 80, '\n')
     i += 1
 conn.close()
 
