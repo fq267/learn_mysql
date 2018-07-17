@@ -1,5 +1,4 @@
 import datetime
-
 import requests
 import random
 import time
@@ -12,7 +11,7 @@ from pymongo import MongoClient
 
 
 followPage = '/pic/series/\d+-\d+-p\d+\.html'
-
+list_link = []
 
 def download_by_requests(url, re_times=3, base_url=''):
     if url.startswith('http'):
@@ -33,15 +32,21 @@ def download_by_requests(url, re_times=3, base_url=''):
         print("open_url_return_str", e)
         if re_times > 0:
             print("retry times %s" % re_times)
-            time.sleep(10)
             return download_by_requests(url, re_times - 1)
         else:
             # raise UserWarning("Something bad happened")
             return None
 
 
+def remove_invalid_letter(str_begain, valid_letter=['?', '<', '>', '"', '*', '|', '/']):
+    for letter in valid_letter:
+        str_begain = str_begain.replace(letter, '')
+    return str_begain
+
+
 def download_pic(url, re_times=3):
-    base_url = "https://car%d.autoimg.cn" % random.choice([1, 2, 3])
+    dkflajdlkjasdlkj = 3 - re_times % 3
+    base_url = "https://car%d.autoimg.cn" % dkflajdlkjasdlkj
     url = url.replace('/t_', '/1024x0_1_q87_')
     url = url[url.find("autoimg")+11:]
     url = urljoin(base_url, url)
@@ -57,7 +62,7 @@ def download_pic(url, re_times=3):
         print("open_url_return_str", e)
         if re_times > 0:
             print("retry times %s" % re_times)
-            time.sleep(1)
+            # time.sleep(1)
             return download_pic(url, re_times - 1)
         else:
             # raise UserWarning("Something bad happened")
@@ -96,12 +101,24 @@ def save_links(list_links):
     conn.close()
 
 
-conn = MongoClient('localhost', 27017)
-db = conn.carhome
-search_res = db.serieslinks.find().sort("date", 1)  # '1'是顺序，'-1'是倒叙
-conn.close()
-for dict_ in search_res:
-    entryUrl = dict_['link']
+def read_5_each(num=5):
+    conn = MongoClient('localhost', 27017)
+    db = conn.carhome
+    search_res = db.serieslinks.find(limit=num, no_cursor_timeout=True).sort("date", 1)  # '1'是顺序，'-1'是倒叙
+    conn.close()
+    i = 1
+    for dict_ in search_res:
+        link = dict_['link']
+        print(i, link)
+        if not link in list_link:
+            list_link.append(link)
+        i += 1
+
+
+while True:
+    if len(list_link) <= 1:
+        read_5_each(num=20)
+    entryUrl = list_link[0]
     print("entryurl is ", entryUrl)
     r = download_by_requests(entryUrl, re_times=4)   #从一种车型的图片裤进入
     pyquery_object = pq(r.text)
@@ -111,6 +128,7 @@ for dict_ in search_res:
     name_of_car = pyquery_object.find('.fn-left.cartab-title-name').text()      #获取车型的名字
     print('name_of_car', name_of_car)
     path_dir = 'D:\downloaded_pic\%s\\' % name_of_car       #判断该车型的目录是否存在，不存在就创建
+    path_dir = remove_invalid_letter(path_dir)
     if not Path(path_dir).exists():
         os.mkdir(path_dir)
     dict_of_kind = {'1': '车身外观', '10': '中控方向盘', '3': '车厢座椅', '12': '其它细节', '51': '改装', '14': '图解'}
@@ -127,10 +145,11 @@ for dict_ in search_res:
         link_of_chapter = pq(item).attr("src")
         name_of_chapter = pq(item).attr('title')
         name_of_chapter = name_of_chapter + "-" + kind_name
+        name_of_chapter = remove_invalid_letter(name_of_chapter, valid_letter=['?', '<', '>', '\\', '"', '*', '|', '/'])
         pic_name = "%s%s_%s.jpg" % (path_dir, i, name_of_chapter)
         print('path_dir is ', path_dir)
         print('pic_name is ', pic_name)
-        content = download_pic(link_of_chapter, re_times=8)
+        content = download_pic(link_of_chapter, re_times=7)
         if content:
             with open(pic_name, 'wb') as file:
                 print(i, "pic_name is ", pic_name)
@@ -146,5 +165,10 @@ for dict_ in search_res:
         i += 1
         print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
         print("-"*90)
+    list_link.pop(0)
+    print("There are %s links in list." % len(list_link))
+    conn = MongoClient('localhost', 27017)
+    db = conn.carhome
     db.serieslinks.update_one(filter={'link': entryUrl}, update={'$set': {"date": date}}, upsert=True)
+    conn.close()
     print("\n", "#"*90)

@@ -104,11 +104,11 @@ def save_links(list_links):
 def read_5_each(num=5):
     conn = MongoClient('localhost', 27017)
     db = conn.carhome
-    search_res = db.serieslinks.find(limit=80, no_cursor_timeout=True).sort("date", 1)  # '1'是顺序，'-1'是倒叙
+    search_res = db.serieslinks.find(limit=120, no_cursor_timeout=True).sort("date", 1)  # '1'是顺序，'-1'是倒叙
     conn.close()
     i = 1
     for dict_ in search_res:
-        if i >= 60:
+        if i >= 100:
             link = dict_['link']
             print(i, link)
             if not link in list_link:
@@ -129,7 +129,7 @@ while True:
     name_of_car = pyquery_object.find('.fn-left.cartab-title-name').text()      #获取车型的名字
     print('name_of_car', name_of_car)
     path_dir = 'D:\downloaded_pic\%s\\' % name_of_car       #判断该车型的目录是否存在，不存在就创建
-    path_dir = remove_invalid_letter(path_dir, valid_letter=['?', '<', '>', '"', '*', '|', '/', ':'])
+    path_dir = remove_invalid_letter(path_dir)
     if not Path(path_dir).exists():
         os.mkdir(path_dir)
     dict_of_kind = {'1': '车身外观', '10': '中控方向盘', '3': '车厢座椅', '12': '其它细节', '51': '改装', '14': '图解'}
