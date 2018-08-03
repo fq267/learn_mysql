@@ -1,12 +1,12 @@
 import BiQuGeDownloader
 from pymongo import MongoClient
+import re
+from urllib.parse import urljoin
 
 
-def d_links(url):
+def d_links(url, db):
     hunter = BiQuGeDownloader.BiQuGeDownloader()
     str_of_result = hunter.open_url_return_str(url)
-    conn = MongoClient('localhost', 27017)
-    db = conn.novels
     dict_of_chapter = hunter.get_contents(str_of_result, wanted="link", baseurl=url)
     i = 1
     for id_of_chapter, (name_of_chapter, link_of_chapter) in dict_of_chapter.items():
@@ -21,9 +21,21 @@ def d_links(url):
             i += 1
         else:
             print("This link is existed, its id is %s" % id_of_chapter)
-    conn.close()
+    # conn.close()
 
 
-for url in ['http://www.biqugex.com/book_39120/', 'http://www.biqugex.com/book_53174/']:
-    d_links(url)
+hunter = BiQuGeDownloader.BiQuGeDownloader()
+str_of_result = hunter.open_url_return_str('http://www.biqugex.com/')
+conn = MongoClient('localhost', 27017)
+db = conn.novels
+links = re.findall('/book_\d+/', str_of_result)
+j = 1
+for link in list(set(links)):
+    print("#"*100)
+    link = urljoin('http://www.biqugex.com/', link)
+    d_links(link, db)
+    print(j, link)
+    j += 1
+conn.close()
+
 
