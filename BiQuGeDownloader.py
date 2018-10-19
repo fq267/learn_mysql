@@ -19,7 +19,7 @@ class BiQuGeDownloader(object):
             print("open_url_return_str", e)
             if re_times > 0:
                 print("retry times %s" % re_times)
-                time.sleep(10)
+                time.sleep(4)
                 return self.open_url_return_str(url, re_times - 1)
             else:
                 raise UserWarning("Something bad happened")

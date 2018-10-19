@@ -1,7 +1,6 @@
 import datetime
 import re
 import time
-import random
 
 import requests
 from selenium import webdriver
@@ -17,9 +16,10 @@ pattenparty = "/pic/series/\d+-\d+.html"
 
 def download_by_phantom(url, charset='gbk'):
     '''return page content as string '''
-    browser = webdriver.PhantomJS()
+    browser = webdriver.Ie()
     browser.get(url)
     content = browser.page_source.encode(charset, "ignore").decode(charset, 'ignore')
+    browser.close()
     return content
 
 
@@ -88,13 +88,8 @@ for url in set(partyLinks):
         db.serieslinks.insert_one({"link": url, "date": date})
         print("%d links have added into database" % i, "the info as following: ")
         print(url, date)
-        i += 1
     else:
         print("This link is existed, link is %s" % url)
-    print('url is ', url)
-    time.sleep(1)
     print('#' * 80, '\n')
     i += 1
 conn.close()
-
-# https://car.autohome.com.cn/pic/series/3126-1-p2.html

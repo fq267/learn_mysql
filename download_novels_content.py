@@ -3,12 +3,12 @@ from pymongo import MongoClient
 import time
 
 
+
 def get_links_from_db():
     conn = MongoClient('localhost', 27017)
     db = conn.novels
     filter_link = {'status_of_visited': {'$eq': 0}}
-    search_res = db.links_for_books.find(filter_link).sort("id_of_chapter", -1)
-    conn.close()
+    search_res = db.links_for_books.find(filter=filter_link).sort("id_of_chapter", -1)
     return search_res
 
 
@@ -25,15 +25,18 @@ for record in search_res:
         res_content = hunter.get_contents(res, wanted='content')
         res_content['id_of_chapter'] = id_of_chapter
         print("book_name is %s, chapter_name is %s, content is %s" %
-              (res_content.get('book_name'), res_content.get('chapter_name'), res_content.get('content')[100:120]))
+              (res_content.get('book_name'), record.get('name_of_chapter'), res_content.get('content')[100:120]))
         updateFilter = {'id_of_chapter': record['id_of_chapter']}
-        updateRes = db.links_for_books.update_one(filter=updateFilter, update={'$set': {"status_of_visited": 1}},
+        updateRes = db.links_for_books.update_one(filter=updateFilter,
+                                                  update={'$set': {"status_of_visited": 1,
+                                                                   "book_name": res_content.get('book_name'),
+                                                                   "content": res_content.get('content')}},
                                                   upsert=True)
-        db.contents.insert_one(res_content)
+        # db.contents.insert_one(res_content)
     except UserWarning as e:
         print(e)
     finally:
-        conn.close()
         time.sleep(0.8)
         print(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())))
         print("#" * 100, "\n" * 2)
+conn.close()
