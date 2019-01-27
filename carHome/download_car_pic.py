@@ -125,7 +125,7 @@ while True:
     page_links = parse_page_by_patten(followPage, r.text)   #获取翻页链接
     print("获取到的翻页链接是 ", page_links)
     save_links(page_links)
-    name_of_car = pyquery_object.find('.fn-left.cartab-title-name').text()      #获取车型的名字
+    name_of_car = pyquery_object.find('.fn-left.cartab-title-name').text()      #获取车型的名字find(l
     name_of_car = remove_invalid_letter(name_of_car)
     print('name_of_car', name_of_car)
     path_dir = 'D:\downloaded_pic\%s\\' % name_of_car       #判断该车型的目录是否存在，不存在就创建

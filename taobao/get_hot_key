@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+from urllib.parse import urljoin
+import requests
+from pyquery import PyQuery as pq
+import time
+import random
+
+base_url = "https://www.maopo.net/tag/index/p/"
+
+
+def download_by_requests(url, re_times=3, base_url=''):
+    if url.startswith('http'):
+        pass
+    elif len(base_url) > 0:
+        url = urljoin(base_url, url)
+    else:
+        raise UserWarning("you need base url ,but it is empty")
+    print("This link will be downloaded, ", url)
+    try:
+        res = requests.get(url, timeout=5)
+        if res.status_code >= 300:
+            raise UserWarning("http code is larger than 300.")
+        else:
+            print("succeed downloaded")
+            return res
+    except Exception as e:
+        print("open_url_return_str", e)
+        if re_times > 0:
+            print("retry times %s" % re_times)
+            return download_by_requests(url, re_times - 1)
+        else:
+            # raise UserWarning("Something bad happened")
+            return None
+
+
+# 存入文件
+def save_key_to_file(path, keys_list):
+    with open(path, "a", encoding="utf-8") as f:
+        for key in keys_list:
+            f.write(key + "\n")
+    f.close()
+
+
+# 获取热词
+def get_detail_info(page_content):
+    # 获取热词
+    pyquery_object = pq(page_content)
+    hot_keys = pyquery_object.find('.page>.tags-main a').text()
+    return hot_keys.split()
+
+
+for i in range(1, 100):
+    url = "https://www.maopo.net/tag/index/p/" + str(i) + ".html"
+    page_obj = download_by_requests(url)
+    hot_keys = get_detail_info(page_obj.content)
+    print("url %s, keys %d" % (url, len(hot_keys)))
+    save_key_to_file("hot_keys", hot_keys)
+    time.sleep(random.randint(1, 4))
