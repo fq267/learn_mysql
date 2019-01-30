@@ -128,8 +128,12 @@ def getip(targeturl, path):
     print('一共爬取代理ip: %s 个,共耗时: %s \n' % (len(ips), diff))
 
 
+def entry():
+    path = 'ip.txt'  # 存放爬取ip的文档path
+    targeturl = 'http://you.163.com/'  # 验证ip有效性的指定url
+    getip(targeturl, path)
+
+
 # -------------------------------------------------------启动-----------------------------------------------------------
 if __name__ == '__main__':
-    path = 'ip.txt'  # 存放爬取ip的文档path
-    targeturl = 'http://you.163.com/item/list?categoryId=1013001&subCategoryId=1037001'  # 验证ip有效性的指定url
-    getip(targeturl, path)
+    entry()

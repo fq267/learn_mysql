@@ -54,7 +54,21 @@
 # db = conn.taobao_spider
 # db.item_info.update({},{'$rename' : {"link" : "link_of_item1"}}, False, True)
 
-a = {'rate_counter': '139', 'current_price': '', 'sell_counter': '-', 'name_of_item': '新年春节万圣节手提南瓜灯幼儿园装饰儿童玩具发光小红灯笼南瓜桶',
-     'origin_price': '12.80 - 19.80',
-     'attributes_of_item': '品牌:一匠倾心 材质:塑料 颜色分类:小号南瓜灯 中号南瓜灯 大号南瓜灯 女生微笑南瓜灯 双面蜘蛛南瓜灯 光源类型:电灯'}
+import requests
 
+proxies = {
+    "http": "http://119.101.124.165:9999"  # 代理ip
+}
+
+headers = {
+    "User_Agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1",
+}
+
+# http_url = "http://you.163.com/item/list?categoryId=1013001&subCategoryId=1037001"
+http_url = "http://you.163.com/item/list?categoryId=1005000"
+res = requests.get(url=http_url, timeout=30)
+if res.status_code == 200:
+    print("done")
+    print(res.text)
+else:
+    print("failed")

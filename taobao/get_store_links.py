@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import time, re
+import time
+import re
 import datetime
 import random
 
@@ -9,21 +10,14 @@ from selenium import webdriver
 from urllib.parse import urljoin
 from pymongo import MongoClient
 
-# https://qiang.taobao.com/  往下滚
-# https://g.taobao.com/brand_detail.htm?navigator=all&_input_charset=utf-8&q=&cat=50010788&s=50&spm=5148.138516.929286.1.4a082453i1Leh1 点击下一页
-
 '''定义抓取入口，两种需要匹配的链接'''
-home_page = "https://www.taobao.com/markets/tbhome/cool-shop"
-# home_page = "https://jupage.taobao.com/wow/tttj/act/index"
+# home_page = "https://www.taobao.com/markets/tbhome/cool-shop"
+home_page = "https://jupage.taobao.com/wow/tttj/act/index"
 '''定义需要访问的非商品的链接'''
-# https://jupage.taobao.com/wow/tttj/act/index
 visit_patten = ["//shop\d+.taobao.com", "//\w+.taobao.com", "//\w+.tmall.com", "//jupage.taobao.com/\w+/\w+/\w+/index"]
 '''定义需要的商品链接格式'''
 item_patten = ["//detail.tmall.com/item.htm[0-9-a-z_A-Z.?&=]+id=\d+",
                "/item.taobao.com/item.htm[0-9-a-z_A-Z.?&=]+id=\d+"]
-
-
-# https://detail.tmall.com/item.htm?spm=a1z10.1-b-s.w5003-21270906099.17.4a8b4da1nbJmVp&id=567793997005&rn=c33f4d7f7366ba5557d03421a5313f9c&abbucket=1&scene=taobao_shop
 
 
 def parse_page_by_patten(patten, content):
@@ -34,8 +28,8 @@ def parse_page_by_patten(patten, content):
 def download_by_webdriver(url, visit_type="visit", charset='gbk'):
     '''return page content as string '''
     print("begin download the link %s" % url)
-    driver = webdriver.Chrome()
-    # driver = webdriver.PhantomJS()
+    # driver = webdriver.Chrome()
+    driver = webdriver.PhantomJS()
     driver.get(url)
     if visit_type == "home":
         content = driver.page_source.encode(charset, "ignore").decode(charset, 'ignore')
@@ -46,8 +40,9 @@ def download_by_webdriver(url, visit_type="visit", charset='gbk'):
                 for i in range(0, 20):
                     print("scroll time %d." % i)
                     driver.execute_script("window.scrollTo(0, 100);")
+                    time.sleep(0.5)
                     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                    time.sleep(random.randint(2, 10))
+                    time.sleep(1)
                     content = driver.page_source.encode(charset, "ignore").decode(charset, 'ignore')
                     driver.quit()
             except Exception as e:
